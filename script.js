@@ -212,3 +212,37 @@ document
     el.style.transition = "opacity 0.6s ease, transform 0.6s ease"
     observer.observe(el)
   })
+
+// back to top button //
+
+document.addEventListener("DOMContentLoaded", () => {
+  const backToTopBtn = document.querySelector(".back-to-top-btn")
+  const hero = document.getElementById("hero")
+
+  if (!backToTopBtn || !hero) return
+
+  // Hide initially
+  backToTopBtn.style.opacity = 0
+  backToTopBtn.style.pointerEvents = "none"
+  backToTopBtn.style.transition = "opacity 0.4s ease"
+
+  function toggleBackToTop() {
+    const heroBottom = hero.getBoundingClientRect().bottom
+
+    if (heroBottom < 0) {
+      // User scrolled past hero, show button
+      backToTopBtn.style.opacity = 1
+      backToTopBtn.style.pointerEvents = "auto"
+    } else {
+      // Hide button
+      backToTopBtn.style.opacity = 0
+      backToTopBtn.style.pointerEvents = "none"
+    }
+  }
+
+  window.addEventListener("scroll", toggleBackToTop)
+
+  backToTopBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  })
+})
