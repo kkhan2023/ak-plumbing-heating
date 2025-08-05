@@ -573,6 +573,25 @@ html {
   font-weight: bold;
 }
 
+/* CTA Section */
+
+.section.dark {
+  background: var(--secondary);
+}
+
+.section.dark h2,
+.section.dark p {
+  color: white;
+}
+
+.cta-buttons.bottom {
+  text-align: center;
+}
+
+.cta-buttons.bottom > .btn-primary {
+  background-color: #25d366;
+}
+
 /* Lightbox */
 .lightbox {
   position: fixed;
