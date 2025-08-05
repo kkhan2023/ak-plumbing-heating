@@ -88,7 +88,7 @@ html {
   color: var(--primary);
   text-decoration: 2px underline;
   text-underline-offset: 7px;
-  transform: scale(1.1);
+  /* transform: scale(1.1); */
 }
 
 .contact-header {
@@ -654,7 +654,7 @@ html {
 
 /* Mobile Responsive */
 
-@media (max-width: 1000px) {
+@media (max-width: 1030px) {
   .mobile-menu-btn {
     display: block;
   }
@@ -729,6 +729,13 @@ html {
 }
 
 @media (max-width: 480px) {
+  .logo {
+    font-size: 1.15rem;
+  }
+
+  .logo i {
+    font-size: 1.25rem;
+  }
   .hero h1 {
     font-size: 1.8rem;
   }
@@ -754,7 +761,7 @@ html {
   }
 
   .hero {
-    margin-top: 40px;
+    margin-top: 20px;
   }
 }
 
