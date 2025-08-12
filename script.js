@@ -158,24 +158,6 @@ document.addEventListener("keydown", (e) => {
   }
 })
 
-// Form submission
-document
-  .getElementById("contact-form")
-  .addEventListener("submit", function (e) {
-    e.preventDefault()
-
-    // Get form data
-    const formData = new FormData(this)
-    const data = Object.fromEntries(formData)
-
-    // Here you would typically send the data to your server
-    // For demo purposes, we'll just show an alert
-    alert("Thank you for your message! We'll get back to you soon.")
-
-    // Reset form
-    this.reset()
-  })
-
 // Header scroll effect
 window.addEventListener("scroll", () => {
   const header = document.querySelector(".header")
