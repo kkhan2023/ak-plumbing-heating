@@ -292,7 +292,6 @@ button:focus-visible,
 
 .section-intro--muted {
   color: var(--light-text);
-  text-align: center;
 }
 
 /* About Section */
@@ -323,8 +322,10 @@ button:focus-visible,
   box-shadow: var(--shadow-lg);
 }
 
-/* Gas Safe logo in the qualifications cards */
-.gas-safe-badge {
+/* Gas Safe logo in the qualifications cards
+   (targets any img in the card so it can never blow up the layout) */
+.gas-safe-badge,
+.qualification-card img {
   width: 60px;
   height: auto;
   margin: 0 auto 1rem;
