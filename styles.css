@@ -292,6 +292,7 @@ button:focus-visible,
 
 .section-intro--muted {
   color: var(--light-text);
+  text-align: center;
 }
 
 /* About Section */
