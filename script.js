@@ -1,45 +1,41 @@
-// Mobile menu toggle
+// Loaded with `defer`, so the DOM is ready when this runs.
+
+/* ---------------------------------------------
+   Mobile menu
+--------------------------------------------- */
 const mobileMenuBtn = document.getElementById("mobile-menu-btn")
 const nav = document.getElementById("nav")
 
-mobileMenuBtn.addEventListener("click", () => {
-  nav.classList.toggle("active")
+function setMenu(open) {
+  nav.classList.toggle("active", open)
+  mobileMenuBtn.setAttribute("aria-expanded", String(open))
+  mobileMenuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu")
+
   const icon = mobileMenuBtn.querySelector("i")
-  if (nav.classList.contains("active")) {
-    icon.classList.remove("fa-bars")
-    icon.classList.add("fa-times")
-  } else {
-    icon.classList.remove("fa-times")
-    icon.classList.add("fa-bars")
-  }
-})
+  icon.classList.toggle("fa-bars", !open)
+  icon.classList.toggle("fa-times", open)
+}
 
-// Close mobile menu when clicking on a link
-document.querySelectorAll(".nav a").forEach((link) => {
-  link.addEventListener("click", () => {
-    nav.classList.remove("active")
-    const icon = mobileMenuBtn.querySelector("i")
-    icon.classList.remove("fa-times")
-    icon.classList.add("fa-bars")
+if (mobileMenuBtn && nav) {
+  mobileMenuBtn.addEventListener("click", () => {
+    setMenu(!nav.classList.contains("active"))
   })
-})
 
-// Smooth scrolling for anchor links
-document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-  anchor.addEventListener("click", function (e) {
-    e.preventDefault()
-    const target = document.querySelector(this.getAttribute("href"))
-    if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-    }
+  // Close the menu when a link is chosen
+  nav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setMenu(false))
   })
-})
+}
 
-// Lightbox functionality
-const workItems = document.querySelectorAll(".work-item")
+// Smooth scrolling is handled by `scroll-behavior: smooth` in styles.css,
+// and `scroll-margin-top` stops the fixed header covering section titles.
+
+/* ---------------------------------------------
+   Lightbox
+   Gallery data is read from the HTML, so captions
+   only need editing in one place.
+--------------------------------------------- */
+const workItems = Array.from(document.querySelectorAll(".work-item"))
 const lightbox = document.getElementById("lightbox")
 const lightboxImage = document.getElementById("lightbox-image")
 const lightboxTitle = document.getElementById("lightbox-title")
@@ -48,183 +44,170 @@ const lightboxClose = document.getElementById("lightbox-close")
 const lightboxPrev = document.getElementById("lightbox-prev")
 const lightboxNext = document.getElementById("lightbox-next")
 
+const galleryData = workItems.map((item) => {
+  const img = item.querySelector("img")
+  return {
+    src: img ? img.getAttribute("src") : "",
+    alt: img ? img.getAttribute("alt") : "",
+    title: item.querySelector(".work-overlay h4")?.textContent.trim() || "",
+    description:
+      item.querySelector(".work-overlay p")?.textContent.trim() || "",
+  }
+})
+
 let currentIndex = 0
 let isLightboxOpen = false
+let lastFocused = null
 
-// Gallery data
-const galleryData = [
-  {
-    src: "assets/boiler-installations-bolton.webp",
-    title: "Boiler Installation",
-    description: "New Worcester Bosch combi boiler installation in Bolton",
-  },
-  {
-    src: "assets/kitchen-plumber.webp",
-    title: "Kitchen Plumbing",
-    description:
-      "1st and 2nd fix kitchen plumbing completed for a client in Manchester",
-  },
-  {
-    src: "assets/central-heating-pipework-install-bolton.webp",
-    title: "Central Heating System",
-    description:
-      "Full central heating system installation with radiators Atherton",
-  },
-  {
-    src: "assets/ahsan-ak-plumbing-heating-bolton.webp",
-    title: "Boiler Installation & Pipework Repair",
-    description:
-      "Repaired pipework to facilitate safe and compliant installation of the new boiler",
-  },
-  {
-    src: "assets/gas-cooker-installs-bolton.webp",
-    title: "Gas Cooker Installation",
-    description: "Safe and professional gas cooker installation",
-  },
-  {
-    src: "assets/gas-safety-check-bolton-for-landlords.webp",
-    title: "Gas Safety Inspection",
-    description: "Annual gas safety certificate and appliance check",
-  },
-]
-
-// Open lightbox
-function openLightbox(index) {
-  currentIndex = index
-  isLightboxOpen = true
-  updateLightboxContent()
-  lightbox.classList.add("active")
-  document.body.style.overflow = "hidden"
-}
-
-// Close lightbox
-function closeLightbox() {
-  isLightboxOpen = false
-  lightbox.classList.remove("active")
-  document.body.style.overflow = ""
-}
-
-// Update lightbox content
 function updateLightboxContent() {
   const item = galleryData[currentIndex]
   lightboxImage.src = item.src
-  lightboxImage.alt = item.title
+  lightboxImage.alt = item.alt || item.title
   lightboxTitle.textContent = item.title
   lightboxDescription.textContent = item.description
 }
 
-// Navigate to previous image
+function openLightbox(index) {
+  currentIndex = index
+  isLightboxOpen = true
+  lastFocused = document.activeElement
+  updateLightboxContent()
+  lightbox.classList.add("active")
+  lightbox.setAttribute("aria-hidden", "false")
+  document.body.style.overflow = "hidden"
+  lightboxClose.focus()
+}
+
+function closeLightbox() {
+  isLightboxOpen = false
+  lightbox.classList.remove("active")
+  lightbox.setAttribute("aria-hidden", "true")
+  document.body.style.overflow = ""
+  if (lastFocused) lastFocused.focus()
+}
+
 function showPrevious() {
-  currentIndex = currentIndex === 0 ? galleryData.length - 1 : currentIndex - 1
+  currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length
   updateLightboxContent()
 }
 
-// Navigate to next image
 function showNext() {
-  currentIndex = currentIndex === galleryData.length - 1 ? 0 : currentIndex + 1
+  currentIndex = (currentIndex + 1) % galleryData.length
   updateLightboxContent()
 }
 
-// Event listeners
-workItems.forEach((item, index) => {
-  item.addEventListener("click", () => openLightbox(index))
-})
+if (lightbox && galleryData.length) {
+  workItems.forEach((item, index) => {
+    // Make gallery items usable with a keyboard
+    item.setAttribute("tabindex", "0")
+    item.setAttribute("role", "button")
+    item.setAttribute("aria-label", `View larger: ${galleryData[index].title}`)
 
-lightboxClose.addEventListener("click", closeLightbox)
-lightboxPrev.addEventListener("click", showPrevious)
-lightboxNext.addEventListener("click", showNext)
+    item.addEventListener("click", () => openLightbox(index))
+    item.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault()
+        openLightbox(index)
+      }
+    })
+  })
 
-// Close lightbox when clicking outside content
-lightbox.addEventListener("click", (e) => {
-  if (e.target === lightbox) {
-    closeLightbox()
-  }
-})
+  lightboxClose.addEventListener("click", closeLightbox)
+  lightboxPrev.addEventListener("click", showPrevious)
+  lightboxNext.addEventListener("click", showNext)
 
-// Keyboard navigation
-document.addEventListener("keydown", (e) => {
-  if (!isLightboxOpen) return
+  // Close when clicking the dark background
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) closeLightbox()
+  })
 
-  switch (e.key) {
-    case "Escape":
-      closeLightbox()
-      break
-    case "ArrowLeft":
-      showPrevious()
-      break
-    case "ArrowRight":
-      showNext()
-      break
-  }
-})
-
-// Header scroll effect
-window.addEventListener("scroll", () => {
-  const header = document.querySelector(".header")
-  if (window.scrollY > 100) {
-    header.style.backdropFilter = "blur(10px)"
-  } else {
-    header.style.backdropFilter = "none"
-  }
-})
-
-// Add animation on scroll
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: "0px 0px -50px 0px",
+  // Keep Tab focus inside the lightbox while it's open
+  lightbox.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return
+    const focusable = [lightboxClose, lightboxPrev, lightboxNext]
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  })
 }
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = "1"
-      entry.target.style.transform = "translateY(0)"
-    }
-  })
-}, observerOptions)
-
-// Observe elements for animation
-document
-  .querySelectorAll(
-    ".service-card, .qualification-card, .work-item, .testimonial-card"
-  )
-  .forEach((el) => {
-    el.style.opacity = "0"
-    el.style.transform = "translateY(20px)"
-    el.style.transition = "opacity 0.6s ease, transform 0.6s ease"
-    observer.observe(el)
-  })
-
-// back to top button //
-
-document.addEventListener("DOMContentLoaded", () => {
-  const backToTopBtn = document.querySelector(".back-to-top-btn")
-  const hero = document.getElementById("hero")
-
-  if (!backToTopBtn || !hero) return
-
-  // Hide initially
-  backToTopBtn.style.opacity = 0
-  backToTopBtn.style.pointerEvents = "none"
-  backToTopBtn.style.transition = "opacity 0.4s ease"
-
-  function toggleBackToTop() {
-    const heroBottom = hero.getBoundingClientRect().bottom
-
-    if (heroBottom < 0) {
-      // User scrolled past hero, show button
-      backToTopBtn.style.opacity = 1
-      backToTopBtn.style.pointerEvents = "auto"
-    } else {
-      // Hide button
-      backToTopBtn.style.opacity = 0
-      backToTopBtn.style.pointerEvents = "none"
-    }
+/* ---------------------------------------------
+   Keyboard shortcuts
+--------------------------------------------- */
+document.addEventListener("keydown", (e) => {
+  if (isLightboxOpen) {
+    if (e.key === "Escape") closeLightbox()
+    if (e.key === "ArrowLeft") showPrevious()
+    if (e.key === "ArrowRight") showNext()
+    return
   }
 
-  window.addEventListener("scroll", toggleBackToTop)
+  if (e.key === "Escape" && nav && nav.classList.contains("active")) {
+    setMenu(false)
+    mobileMenuBtn.focus()
+  }
+})
+
+/* ---------------------------------------------
+   Reveal-on-scroll animation
+   Skipped for users who prefer reduced motion.
+--------------------------------------------- */
+const prefersReducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)",
+).matches
+
+const revealTargets = document.querySelectorAll(
+  ".service-card, .qualification-card, .work-item, .testimonial-card",
+)
+
+if (!prefersReducedMotion && "IntersectionObserver" in window) {
+  const revealObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible")
+          observer.unobserve(entry.target) // animate once only
+        }
+      })
+    },
+    { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+  )
+
+  revealTargets.forEach((el) => {
+    el.classList.add("reveal")
+    revealObserver.observe(el)
+  })
+}
+
+/* ---------------------------------------------
+   Back to top button
+   Shows once the hero has scrolled out of view.
+--------------------------------------------- */
+const backToTopBtn = document.querySelector(".back-to-top-btn")
+const hero = document.getElementById("hero")
+
+if (backToTopBtn && hero && "IntersectionObserver" in window) {
+  const heroObserver = new IntersectionObserver(([entry]) => {
+    backToTopBtn.classList.toggle("is-visible", !entry.isIntersecting)
+  })
+  heroObserver.observe(hero)
 
   backToTopBtn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    })
   })
-})
+}
+
+/* ---------------------------------------------
+   Footer year
+--------------------------------------------- */
+const yearEl = document.getElementById("year")
+if (yearEl) yearEl.textContent = new Date().getFullYear()
